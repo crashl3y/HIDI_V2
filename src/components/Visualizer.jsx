@@ -26,7 +26,22 @@ const Visualizer = ({ audioData, isListening, intensity = 0, width = 600, height
         const ctx = canvas.getContext('2d');
         let animationId;
 
+        let lastFrameTime = 0;
+        const fpsInterval = 1000 / 30; // target ~30 FPS
+
         const draw = () => {
+            const now = Date.now();
+            if (now - lastFrameTime < fpsInterval) {
+                animationId = requestAnimationFrame(draw);
+                return;
+            }
+            lastFrameTime = now;
+
+            // If the page is not visible, skip heavy drawing
+            if (typeof document !== 'undefined' && document.hidden) {
+                animationId = requestAnimationFrame(draw);
+                return;
+            }
             const w = canvas.width;
             const h = canvas.height;
             const centerX = w / 2;
@@ -40,7 +55,7 @@ const Visualizer = ({ audioData, isListening, intensity = 0, width = 600, height
             const currentIsListening = isListeningRef.current;
 
             const baseRadius = Math.min(w, h) * 0.25;
-            const radius = baseRadius + (currentIntensity * 40);
+            const radius = baseRadius + (currentIntensity * 20);
 
             ctx.clearRect(0, 0, w, h);
 
@@ -54,13 +69,13 @@ const Visualizer = ({ audioData, isListening, intensity = 0, width = 600, height
             if (!currentIsListening) {
                 // Idle State: Breathing Circle
                 const time = Date.now() / 1000;
-                const breath = Math.sin(time * 2) * 5;
+                const breath = Math.sin(time * 2) * 2.5;
 
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, radius + breath, 0, Math.PI * 2);
                 ctx.strokeStyle = 'rgba(34, 211, 238, 0.5)';
                 ctx.lineWidth = 4;
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 10;
                 ctx.shadowColor = '#22d3ee';
                 ctx.stroke();
                 ctx.shadowBlur = 0;
@@ -70,7 +85,7 @@ const Visualizer = ({ audioData, isListening, intensity = 0, width = 600, height
                 ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
                 ctx.strokeStyle = 'rgba(34, 211, 238, 0.8)';
                 ctx.lineWidth = 4;
-                ctx.shadowBlur = 20;
+                ctx.shadowBlur = 10;
                 ctx.shadowColor = '#22d3ee';
                 ctx.stroke();
                 ctx.shadowBlur = 0;
